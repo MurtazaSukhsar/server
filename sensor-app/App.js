@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native';
 import { Accelerometer } from 'expo-sensors';
 
-const SERVER_IP = '192.168.0.123'; // Updated to your local IP
-const WS_URL = `ws://${SERVER_IP}:3000`;
+const WS_URL = 'wss://rehab-hub.onrender.com';
 
 export default function App() {
   const [data, setData] = useState({ x: 0, y: 0, z: 0 });
