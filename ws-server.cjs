@@ -1,36 +1,20 @@
 const http = require("http");
 const WebSocket = require("ws");
 
-const PORT = process.env.PORT || 3000;
-
-// create HTTP server
-const server = http.createServer((req, res) => {
-
-  // allow requests from any website (fix CORS)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  res.writeHead(200);
-  res.end("Sensor WebSocket server running");
-});
-
-// create websocket server
+const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
-console.log("WebSocket server starting...");
+console.log("WebSocket server running...");
 
-// when a client connects
 wss.on("connection", (ws) => {
 
   console.log("Client connected");
 
-  // when sensor data arrives
   ws.on("message", (message) => {
 
-    console.log("Sensor data:", message.toString());
+    console.log("Sensor:", message.toString());
 
-    // send the data to ALL connected clients (phone + unity)
+    // broadcast to ALL clients
     wss.clients.forEach((client) => {
 
       if (client.readyState === WebSocket.OPEN) {
@@ -45,13 +29,6 @@ wss.on("connection", (ws) => {
     console.log("Client disconnected");
   });
 
-  ws.on("error", (err) => {
-    console.log("WebSocket error:", err);
-  });
-
 });
 
-// start server
-server.listen(PORT, () => {
-  console.log(`WebSocket server running on port ${PORT}`);
-});
+server.listen(process.env.PORT || 3000);
