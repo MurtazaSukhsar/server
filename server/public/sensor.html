@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rehab Sensor Hub</title>
+    <!-- Google Fonts for premium typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A84FF;
+            --success: #34C759;
+            --danger: #FF453A;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --bg: #000000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: #FFFFFF;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Abstract dynamic background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, #1a2a6c 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, #b21f1f 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, #0f2027 0%, #000 100%);
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 40px;
+            padding: 50px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255, 69, 58, 0.4);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .status-badge.connected {
+            background: rgba(52, 199, 89, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(52, 199, 89, 0.4);
+        }
+
+        .angle-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .angle-display {
+            font-size: 110px;
+            font-weight: 900;
+            line-height: 1;
+            margin: 10px 0;
+            background: linear-gradient(180deg, #FFFFFF 0%, rgba(255,255,255,0.6) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .unit {
+            font-size: 40px;
+            vertical-align: super;
+            margin-left: -5px;
+        }
+
+        .start-btn {
+            background: var(--primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 24px 60px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 800;
+            margin-top: 40px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 30px rgba(10, 132, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+        }
+
+        .hint-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 25px;
+            font-weight: 300;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            font-size: 11px;
+        }
+
+        .stat-val {
+            display: block;
+            font-weight: 600;
+            color: #FFF;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <div class="glass-card">
+            <div id="status" class="status-badge">Disconnected</div>
+            
+            <div class="angle-label">LIVE ORIENTATION</div>
+            <div style="display: flex; justify-content: center; gap: 20px;">
+                <div>
+                   <div id="pitchValue" class="angle-display" style="font-size: 80px;">0</div>
+                   <div class="stat-label">PITCH</div>
+                </div>
+                <div>
+                   <div id="rollValue" class="angle-display" style="font-size: 80px;">0</div>
+                   <div class="stat-label">ROLL</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span id="accX" class="stat-val">0.00</span>
+                    <span class="stat-label">Accel X</span>
+                </div>
+                <div class="stat-item">
+                    <span id="accY" class="stat-val">0.00</span>
+                    <span class="stat-label">Accel Y</span>
+                </div>
+                <div class="stat-item">
+                    <span id="accZ" class="stat-val">0.00</span>
+                    <span class="stat-label">Accel Z</span>
+                </div>
+            </div>
+
+            <button id="startBtn" class="start-btn">Connect Sensor</button>
+            
+            <p class="hint-text">
+                Mount this device on your limb.<br>
+                For best results, use Chrome or Safari.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const angleEl = document.getElementById('angleValue');
+        const startBtn = document.getElementById('startBtn');
+        const accXEl = document.getElementById('accX');
+        const accYEl = document.getElementById('accY');
+        const accZEl = document.getElementById('accZ');
+        
+        let socket = null;
+        const deviceId = 'Web-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        const SERVER_IP = window.location.hostname;
+        // The Hub is now on port 3001 for HTTPS
+        const WS_URL = window.location.protocol === 'https:' ? `wss://${SERVER_IP}:3001` : `ws://${SERVER_IP}:3001`;
+
+        function connectWS() {
+            try {
+                if (socket) socket.close();
+                socket = new WebSocket(WS_URL);
+                
+                socket.onopen = () => {
+                    statusEl.innerText = 'Connected ✓';
+                    statusEl.classList.add('connected');
+                };
+                
+                socket.onclose = () => {
+                    statusEl.innerText = 'Disconnected';
+                    statusEl.classList.remove('connected');
+                    setTimeout(connectWS, 3000);
+                };
+
+                socket.onerror = (err) => {
+                    console.error('WebSocket Error:', err);
+                };
+            } catch (err) {
+                console.error('Failed to connect:', err);
+            }
+        }
+
+        async function initSensor() {
+            startBtn.innerText = 'Initializing...';
+
+            // Check browser compatibility
+            if (!window.DeviceMotionEvent) {
+                alert('Sensor API not found. Please open this link in a mobile browser (Safari/Chrome).');
+                return;
+            }
+
+            // Handle iOS 13+ Permission requirement
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('Permission required to access motion sensors.');
+                        return;
+                    }
+                } catch (e) {
+                    alert('Sensor access must be triggered via HTTPS or localhost. Ensure you are visiting https://' + SERVER_IP + ':3000');
+                    return;
+                }
+            }
+
+            // Successfully started
+            startBtn.style.display = 'none';
+            connectWS();
+
+            window.addEventListener('devicemotion', (event) => {
+                const acc = event.accelerationIncludingGravity;
+                if (!acc) return;
+
+                // Update UI Display
+                accXEl.innerText = acc.x.toFixed(2);
+                accYEl.innerText = acc.y.toFixed(2);
+                accZEl.innerText = acc.z.toFixed(2);
+
+                // Calculate PITCH (Up/Down)
+                const pitch = Math.round(Math.atan2(acc.y, acc.z) * (180 / Math.PI));
+                // Calculate ROLL (Left/Right) 
+                const roll = Math.round(Math.atan2(acc.x, acc.z) * (180 / Math.PI));
+                
+                document.getElementById('pitchValue').innerText = Math.abs(pitch);
+                document.getElementById('rollValue').innerText = roll;
+
+                // Stream to Server
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        deviceId: deviceId,
+                        pitch: pitch,
+                        roll: roll,
+                        angle: Math.abs(pitch), // Maintain backward compatibility
+                        accel_z: acc.z,
+                        raw: { x: acc.x, y: acc.y, z: acc.z },
+                        timestamp: Date.now(),
+                        source: 'web_sensor'
+                    }));
+                }
+            });
+        }
+
+        startBtn.onclick = initSensor;
+    </script>
+</body>
+</html>
