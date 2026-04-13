@@ -278,20 +278,19 @@
             startBtn.style.display = 'none';
             connectWS();
 
-            window.addEventListener('devicemotion', (event) => {
-                const acc = event.accelerationIncludingGravity;
-                if (!acc) return;
-
-                // Orientation Calculation
-                const pitch = Math.round(Math.atan2(acc.y, acc.z) * (180 / Math.PI));
-                const roll = Math.round(Math.atan2(acc.x, acc.z) * (180 / Math.PI));
-                const yaw = Math.round(Math.atan2(acc.x, acc.y) * (180 / Math.PI));
+            // --- HIGH PRECISION 3D ORIENTATION ---
+            window.addEventListener('deviceorientation', (event) => {
+                // Alpha = Yaw, Beta = Pitch, Gamma = Roll
+                const yaw = Math.round(event.alpha || 0);
+                const pitch = Math.round(event.beta || 0);
+                const roll = Math.round(event.gamma || 0);
                 
+                // Update UI
                 pitchValueEl.innerText = Math.abs(pitch);
                 rollValueEl.innerText = roll;
                 yawValueEl.innerText = yaw;
  
-                // Instant stream (no artificial delay)
+                // Instant stream
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({ 
                         pitch, roll, yaw, 
