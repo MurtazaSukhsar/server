@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native';
-import { Accelerometer } from 'expo-sensors';
+import { DeviceMotion } from 'expo-sensors';
 
 const WS_URL = 'wss://rehab-hub.onrender.com';
 
 export default function App() {
-  const [data, setData] = useState({ x: 0, y: 0, z: 0 });
-  const [angle, setAngle] = useState(0);
+  const [data, setData] = useState({ pitch: 0, roll: 0, yaw: 0 });
   const [connected, setConnected] = useState(false);
   const [ws, setWs] = useState(null);
 
@@ -14,26 +13,37 @@ export default function App() {
     const socket = new WebSocket(WS_URL);
     
     socket.onopen = () => setConnected(true);
-    socket.onclose = () => setConnected(false);
+    socket.onclose = () => {
+      setConnected(false);
+      // Reconnect logic
+      setTimeout(() => setWs(new WebSocket(WS_URL)), 3000);
+    };
     socket.onerror = (e) => console.log('WS Error: ', e.message);
     
     setWs(socket);
     
-    Accelerometer.setUpdateInterval(100);
-    const subscription = Accelerometer.addListener(accelerometerData => {
-      setData(accelerometerData);
+    // Set 60Hz update rate (16ms)
+    DeviceMotion.setUpdateInterval(16);
+    
+    const subscription = DeviceMotion.addListener(motionData => {
+      if (!motionData.rotation) return;
       
-      // Calculate angle
-      const calculatedAngle = Math.atan2(accelerometerData.y, accelerometerData.z) * (180 / Math.PI);
-      const absAngle = Math.round(Math.abs(calculatedAngle));
-      setAngle(absAngle);
+      // Get 3D rotation angles in degrees
+      const pitch = Math.round(motionData.rotation.beta * (180 / Math.PI));
+      const roll = Math.round(motionData.rotation.gamma * (180 / Math.PI));
+      const yaw = Math.round(motionData.rotation.alpha * (180 / Math.PI));
+      
+      setData({ pitch, roll, yaw });
 
-      // Stream to server
+      // Stream full 3D data to server
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
-          angle: absAngle,
-          raw: accelerometerData,
-          timestamp: Date.now()
+          pitch,
+          roll,
+          yaw,
+          angle: pitch, // Backward compatibility
+          timestamp: Date.now(),
+          deviceId: 'LimbSensor-3D'
         }));
       }
     });

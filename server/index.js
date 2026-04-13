@@ -14,8 +14,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- STATE ---
-let latestPitch = 0; // Up / Down
-let latestRoll = 0;  // Left / Right
+let latestPitch = 0; // Up / Down (Beta)
+let latestRoll = 0;  // Left / Right (Gamma)
+let latestYaw = 0;   // Twisting (Alpha)
 
 // Helper to get local IP address
 function getLocalIp() {
@@ -175,9 +176,9 @@ app.post('/sensor', (req, res) => {
   }
 });
 
-// GET /sensor : Unity (CURL) fetches "pitch,roll" like "74,10"
+// GET /sensor : Unity (CURL) fetches "pitch,roll,yaw"
 app.get('/sensor', (req, res) => {
-  res.type('text/plain').send(`${latestPitch},${latestRoll}`);
+  res.type('text/plain').send(`${latestPitch},${latestRoll},${latestYaw}`);
 });
 
 // --- OPTIONAL: UNITY GAME HOSTING ---
@@ -221,7 +222,8 @@ wss.on('connection', (ws) => {
         const data = JSON.parse(message);
         if (data.pitch !== undefined) latestPitch = data.pitch;
         if (data.roll !== undefined) latestRoll = data.roll;
-        if (data.angle !== undefined && data.pitch === undefined) latestPitch = data.angle; // Backward compatibility
+        if (data.yaw !== undefined) latestYaw = data.yaw;
+        if (data.angle !== undefined && data.pitch === undefined) latestPitch = data.angle;
         
         // 1. Broadcast to all local WebSocket clients (e.g., other mobile views)
         wss.clients.forEach((client) => {
