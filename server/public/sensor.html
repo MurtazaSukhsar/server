@@ -282,33 +282,21 @@
                 const acc = event.accelerationIncludingGravity;
                 if (!acc) return;
 
-                // Update UI Display
-                accXEl.innerText = acc.x.toFixed(2);
-                accYEl.innerText = acc.y.toFixed(2);
-                accZEl.innerText = acc.z.toFixed(2);
-
-                // Calculate Orientation
+                // Orientation Calculation
                 const pitch = Math.round(Math.atan2(acc.y, acc.z) * (180 / Math.PI));
                 const roll = Math.round(Math.atan2(acc.x, acc.z) * (180 / Math.PI));
-                // Approximate Yaw using acceleration vector
                 const yaw = Math.round(Math.atan2(acc.x, acc.y) * (180 / Math.PI));
                 
                 pitchValueEl.innerText = Math.abs(pitch);
                 rollValueEl.innerText = roll;
                 yawValueEl.innerText = yaw;
  
-                // Stream to Server
+                // Instant stream (no artificial delay)
                 if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
+                    socket.send(JSON.stringify({ 
+                        pitch, roll, yaw, 
                         deviceId: deviceId,
-                        pitch: pitch,
-                        roll: roll,
-                        yaw: yaw,
-                        angle: pitch,
-                        accel_z: acc.z,
-                        raw: { x: acc.x, y: acc.y, z: acc.z },
-                        timestamp: Date.now(),
-                        source: 'web_sensor_3d'
+                        timestamp: Date.now() 
                     }));
                 }
             });

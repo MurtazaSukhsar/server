@@ -223,24 +223,17 @@ wss.on('connection', (ws) => {
         if (data.pitch !== undefined) latestPitch = data.pitch;
         if (data.roll !== undefined) latestRoll = data.roll;
         if (data.yaw !== undefined) latestYaw = data.yaw;
-        if (data.angle !== undefined && data.pitch === undefined) latestPitch = data.angle;
         
-        // 1. Broadcast to all local WebSocket clients (e.g., other mobile views)
+        // Fast Broadcast to all clients (Raw)
         wss.clients.forEach((client) => {
-          if (client.readyState === 1) client.send(JSON.stringify(data));
+          if (client !== ws && client.readyState === 1) client.send(message);
         });
 
-        // 2. Bridge to Flask Backend (for Analysis and Doctor Dashboard)
         if (backendSocket.connected) {
             backendSocket.emit('sensor_data', data);
         }
-
-        // --- DEBUG LOGGING (Cloud only) ---
-        if (IS_PROD && Math.random() > 0.99) {
-            console.log(`[DEBUG] Received from ${data.deviceId || 'Unknown'}: P:${data.pitch} R:${data.roll} Y:${data.yaw}`);
-        }
     } catch (e) {
-        console.error('[HUB] Error parsing message:', e);
+        // High speed silent fail
     }
   });
 });
