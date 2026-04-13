@@ -26,24 +26,32 @@ export default function App() {
     DeviceMotion.setUpdateInterval(16);
     
     const subscription = DeviceMotion.addListener(motionData => {
-      if (!motionData.rotation) return;
-      
-      // Get 3D rotation angles in degrees
-      const pitch = Math.round(motionData.rotation.beta * (180 / Math.PI));
-      const roll = Math.round(motionData.rotation.gamma * (180 / Math.PI));
-      const yaw = Math.round(motionData.rotation.alpha * (180 / Math.PI));
+      let pitch = 0, roll = 0, yaw = 0;
+
+      // Method A: Use built-in rotation (Beta/Gamma)
+      if (motionData.rotation) {
+        pitch = Math.round(motionData.rotation.beta * (180 / Math.PI));
+        roll = Math.round(motionData.rotation.gamma * (180 / Math.PI));
+        yaw = Math.round(motionData.rotation.alpha * (180 / Math.PI));
+      } 
+      // Method B: Fallback to Accelerometer/Gravity calculation if Rotation is null
+      else if (motionData.accelerationIncludingGravity) {
+        const { x, y, z } = motionData.accelerationIncludingGravity;
+        pitch = Math.round(Math.atan2(y, z) * (180 / Math.PI));
+        roll = Math.round(Math.atan2(x, z) * (180 / Math.PI));
+      }
       
       setData({ pitch, roll, yaw });
 
-      // Stream full 3D data to server
+      // Stream to server
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
           pitch,
           roll,
           yaw,
-          angle: pitch, // Backward compatibility
+          angle: pitch,
           timestamp: Date.now(),
-          deviceId: 'LimbSensor-3D'
+          deviceId: 'LimbSensor-3D-V2'
         }));
       }
     });

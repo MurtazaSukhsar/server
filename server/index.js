@@ -233,11 +233,12 @@ wss.on('connection', (ws) => {
         // 2. Bridge to Flask Backend (for Analysis and Doctor Dashboard)
         if (backendSocket.connected) {
             backendSocket.emit('sensor_data', data);
-        } else {
-            if (Math.random() > 0.95) console.warn('⚠ WARNING: Hub is NOT connected to Python Backend (Port 5000)! Ensure app.py is running.');
         }
 
-        if (Math.random() > 0.90) console.log(`[HUB] Transmitting Angle: ${data.angle}° from ${data.deviceId}`);
+        // --- DEBUG LOGGING (Cloud only) ---
+        if (IS_PROD && Math.random() > 0.99) {
+            console.log(`[DEBUG] Received from ${data.deviceId || 'Unknown'}: P:${data.pitch} R:${data.roll} Y:${data.yaw}`);
+        }
     } catch (e) {
         console.error('[HUB] Error parsing message:', e);
     }
