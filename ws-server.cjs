@@ -1,33 +1,43 @@
+const http = require("http");
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: 3000 });
+const server = http.createServer((req, res) => {
 
-let sensorData = { pitch: 0, roll: 0 };
+  // Allow all websites to access this server
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-wss.on("connection", (ws) => {
-
-    ws.on("message", (message) => {
-
-        try {
-
-            const data = JSON.parse(message);
-
-            sensorData.pitch = data.pitch;
-            sensorData.roll = data.roll;
-
-            // broadcast to all clients
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(sensorData));
-                }
-            });
-
-        } catch (e) {
-            console.log("Invalid data");
-        }
-
-    });
-
+  res.writeHead(200);
+  res.end("Sensor server running");
 });
 
-console.log("WebSocket server running");
+const wss = new WebSocket.Server({ server });
+
+let clients = [];
+
+wss.on("connection", (ws) => {
+  console.log("Client connected");
+
+  clients.push(ws);
+
+  ws.on("message", (message) => {
+
+    // broadcast sensor data to all clients
+    clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+
+  });
+
+  ws.on("close", () => {
+    clients = clients.filter(c => c !== ws);
+    console.log("Client disconnected");
+  });
+});
+
+server.listen(3000, () => {
+  console.log("WebSocket server running");
+});
